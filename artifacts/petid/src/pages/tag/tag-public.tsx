@@ -9,6 +9,7 @@ import { useVerifyPetPin } from "@workspace/api-client-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n";
+import { getStoredMedical, MedicalInfo } from "@/lib/local-medical";
 
 type TabType = "home" | "medical" | "gallery" | "owner" | "play";
 
@@ -141,7 +142,7 @@ export function TagPublic({ pet, onUnlock }: { pet: Pet, onUnlock: (pin: string)
          </section>
 
          <section id="section-medical" className="max-w-2xl mx-auto scroll-mt-24">
-            <MedicalTab />
+            <MedicalTab pet={pet} />
          </section>
 
          <section id="section-gallery" className="max-w-2xl mx-auto scroll-mt-24">
@@ -215,8 +216,22 @@ function HomeTab({ pet, onUnlock }: { pet: Pet, onUnlock: () => void }) {
   );
 }
 
-function MedicalTab() {
+function MedicalTab({ pet }: { pet: Pet }) {
   const { t } = useLanguage();
+  const [medical, setMedical] = useState<MedicalInfo | null>(null);
+
+  useEffect(() => {
+    setMedical(getStoredMedical(pet.id));
+  }, [pet.id]);
+
+  const vaccinations = medical?.vaccinations || t('vaccinationsDesc');
+  const allergies = medical?.allergies || t('allergiesDesc');
+  const vetName = medical?.vetName;
+  const vetPhone = medical?.vetPhone;
+  const vetText = vetName || vetPhone
+    ? [vetName, vetPhone].filter(Boolean).join('\n')
+    : t('primaryVetDesc');
+
   return (
     <div className="space-y-6">
       <h2 className="text-3xl font-serif font-extrabold tracking-tight">{t('medicalHistory')}</h2>
@@ -228,7 +243,7 @@ function MedicalTab() {
             </div>
             <div>
                <h3 className="font-bold text-lg">{t('vaccinationsTitle')}</h3>
-               <p className="text-muted-foreground font-medium mt-1">{t('vaccinationsDesc')}</p>
+               <p className="text-muted-foreground font-medium mt-1 whitespace-pre-line">{vaccinations}</p>
             </div>
          </div>
 
@@ -238,7 +253,7 @@ function MedicalTab() {
             </div>
             <div>
                <h3 className="font-bold text-lg">{t('allergiesTitle')}</h3>
-               <p className="text-muted-foreground font-medium mt-1">{t('allergiesDesc')}</p>
+               <p className="text-muted-foreground font-medium mt-1 whitespace-pre-line">{allergies}</p>
             </div>
          </div>
 
@@ -248,7 +263,7 @@ function MedicalTab() {
             </div>
             <div>
                <h3 className="font-bold text-lg">{t('primaryVetTitle')}</h3>
-               <p className="text-muted-foreground font-medium mt-1 whitespace-pre-line">{t('primaryVetDesc')}</p>
+               <p className="text-muted-foreground font-medium mt-1 whitespace-pre-line">{vetText}</p>
             </div>
          </div>
       </div>

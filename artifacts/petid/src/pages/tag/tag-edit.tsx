@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { PhotoUpload } from "@/components/photo-upload";
 import { Switch } from "@/components/ui/switch";
 import { motion } from "framer-motion";
+import { getStoredMedical, setStoredMedical } from "@/lib/local-medical";
 
 const updateSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -24,6 +25,10 @@ const updateSchema = z.object({
   ownerName: z.string().optional(),
   ownerPhone: z.string().min(1, "Phone number is required"),
   photoObjectPath: z.string().optional(),
+  vaccinations: z.string().optional(),
+  allergies: z.string().optional(),
+  vetName: z.string().optional(),
+  vetPhone: z.string().optional(),
 });
 
 type UpdateValues = z.infer<typeof updateSchema>;
@@ -38,6 +43,8 @@ export function TagEdit({ pet, pin, onCancel, onSaved }: { pet: Pet, pin: string
     setIsLost(localStorage.getItem(`pet_lost_${pet.id}`) === 'true');
   }, [pet.id]);
 
+  const storedMedical = getStoredMedical(pet.id);
+
   const form = useForm<UpdateValues>({
     resolver: zodResolver(updateSchema),
     defaultValues: {
@@ -48,6 +55,10 @@ export function TagEdit({ pet, pin, onCancel, onSaved }: { pet: Pet, pin: string
       ownerName: pet.ownerName || "",
       ownerPhone: pet.ownerPhone || "",
       photoObjectPath: pet.photoObjectPath || "",
+      vaccinations: storedMedical?.vaccinations || "",
+      allergies: storedMedical?.allergies || "",
+      vetName: storedMedical?.vetName || "",
+      vetPhone: storedMedical?.vetPhone || "",
     }
   });
 
@@ -65,6 +76,15 @@ export function TagEdit({ pet, pin, onCancel, onSaved }: { pet: Pet, pin: string
           ownerPhone: data.ownerPhone,
           photoObjectPath: data.photoObjectPath || undefined,
         }
+      });
+
+      // Medical info is UI-only (mocked) and has no backend field yet, so it's
+      // persisted locally alongside the real profile update.
+      setStoredMedical(pet.id, {
+        vaccinations: data.vaccinations || "",
+        allergies: data.allergies || "",
+        vetName: data.vetName || "",
+        vetPhone: data.vetPhone || "",
       });
       
       queryClient.setQueryData(getGetPetTagQueryKey(pet.id), updatedPet);
@@ -191,6 +211,78 @@ export function TagEdit({ pet, pin, onCancel, onSaved }: { pet: Pet, pin: string
                        </FormItem>
                      )}
                    />
+                 </motion.div>
+
+                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="space-y-6 pt-6 border-t border-border">
+                   <div>
+                     <h3 className="text-2xl font-serif font-bold text-foreground">{t('medicalInfoTitle')}</h3>
+                     <p className="text-sm font-medium text-muted-foreground mt-1">{t('medicalInfoDesc')}</p>
+                   </div>
+
+                   <FormField
+                     control={form.control}
+                     name="vaccinations"
+                     render={({ field }) => (
+                       <FormItem>
+                         <FormLabel className="font-semibold text-foreground/80">{t('vaccinationsLabel')}</FormLabel>
+                         <FormControl>
+                           <Textarea
+                             placeholder={t('placeholderVaccinations')}
+                             className="min-h-[100px] rounded-[20px] text-lg bg-muted/50 border-transparent focus-visible:bg-background focus-visible:border-primary/50 resize-none p-4"
+                             {...field}
+                           />
+                         </FormControl>
+                         <FormMessage />
+                       </FormItem>
+                     )}
+                   />
+
+                   <FormField
+                     control={form.control}
+                     name="allergies"
+                     render={({ field }) => (
+                       <FormItem>
+                         <FormLabel className="font-semibold text-foreground/80">{t('allergiesLabel')}</FormLabel>
+                         <FormControl>
+                           <Textarea
+                             placeholder={t('placeholderAllergies')}
+                             className="min-h-[100px] rounded-[20px] text-lg bg-muted/50 border-transparent focus-visible:bg-background focus-visible:border-primary/50 resize-none p-4"
+                             {...field}
+                           />
+                         </FormControl>
+                         <FormMessage />
+                       </FormItem>
+                     )}
+                   />
+
+                   <div className="grid grid-cols-2 gap-4">
+                     <FormField
+                       control={form.control}
+                       name="vetName"
+                       render={({ field }) => (
+                         <FormItem>
+                           <FormLabel className="font-semibold text-foreground/80">{t('vetNameLabel')}</FormLabel>
+                           <FormControl>
+                             <Input placeholder={t('placeholderVetName')} className="h-14 rounded-[20px] text-lg bg-muted/50 border-transparent focus-visible:bg-background focus-visible:border-primary/50" {...field} />
+                           </FormControl>
+                           <FormMessage />
+                         </FormItem>
+                       )}
+                     />
+                     <FormField
+                       control={form.control}
+                       name="vetPhone"
+                       render={({ field }) => (
+                         <FormItem>
+                           <FormLabel className="font-semibold text-foreground/80">{t('vetPhoneLabel')}</FormLabel>
+                           <FormControl>
+                             <Input type="tel" placeholder={t('placeholderVetPhone')} className="h-14 rounded-[20px] text-lg bg-muted/50 border-transparent focus-visible:bg-background focus-visible:border-primary/50" {...field} />
+                           </FormControl>
+                           <FormMessage />
+                         </FormItem>
+                       )}
+                     />
+                   </div>
                  </motion.div>
 
                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="space-y-6 pt-6 border-t border-border">

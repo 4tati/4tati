@@ -85,7 +85,17 @@ export const translations = {
     placeholderPhone: "e.g. (555) 123-4567",
     callOwnerCta: "Call the Owner",
     callBtn: "Call",
-    whatsappBtn: "WhatsApp"
+    whatsappBtn: "WhatsApp",
+    medicalInfoTitle: "Medical Information",
+    medicalInfoDesc: "Shown on the Medical tab of the public profile.",
+    vaccinationsLabel: "Vaccinations",
+    allergiesLabel: "Allergies",
+    vetNameLabel: "Primary Vet Name",
+    vetPhoneLabel: "Primary Vet Phone",
+    placeholderVaccinations: "e.g. Up to date. Last checked 2 months ago (Rabies, DHPP).",
+    placeholderAllergies: "e.g. Grains, Chicken. Requires specialized diet.",
+    placeholderVetName: "e.g. Dr. Sarah Jenkins",
+    placeholderVetPhone: "e.g. (555) 987-6543"
   },
   ka: {
     appSlogan: "თქვენი საუკეთესო მეგობრის პრემიუმ ციფრული იდენტობა.",
@@ -169,7 +179,17 @@ export const translations = {
     placeholderPhone: "მაგ. 555 12 34 56",
     callOwnerCta: "დაურეკე პატრონს",
     callBtn: "დარეკვა",
-    whatsappBtn: "WhatsApp"
+    whatsappBtn: "WhatsApp",
+    medicalInfoTitle: "სამედიცინო ინფორმაცია",
+    medicalInfoDesc: "ჩნდება საჯარო პროფილის სამედიცინო ისტორიის განყოფილებაში.",
+    vaccinationsLabel: "ვაქცინაცია",
+    allergiesLabel: "ალერგიები",
+    vetNameLabel: "პირადი ვეტერინარის სახელი",
+    vetPhoneLabel: "პირადი ვეტერინარის ტელეფონი",
+    placeholderVaccinations: "მაგ. განახლებულია. ბოლო შემოწმება 2 თვის წინ (ცოფი, ჭირის კომპლექსი).",
+    placeholderAllergies: "მაგ. მარცვლეული, ქათამი. ესაჭიროება სპეციალური დიეტა.",
+    placeholderVetName: "მაგ. ექიმი სარა ჯენკინსი",
+    placeholderVetPhone: "მაგ. (555) 987-6543"
   }
 };
 
