@@ -60,29 +60,6 @@ export function TagPublic({ pet, onUnlock }: { pet: Pet, onUnlock: (pin: string)
 
   return (
     <div className="min-h-[100dvh] bg-background font-sans relative pb-32">
-      
-      {/* Floating Sticky Actions */}
-      <div className="fixed bottom-28 right-4 flex flex-col gap-4 z-40">
-         {pet.ownerPhone && (
-           <>
-             <motion.a 
-                initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.5, type: 'spring' }}
-                href={whatsappLink} 
-                target="_blank" rel="noopener noreferrer"
-                className="w-14 h-14 bg-[#25D366] text-white rounded-[20px] flex items-center justify-center shadow-lg shadow-[#25D366]/30 hover:scale-110 active:scale-95 transition-transform"
-             >
-                <MessageCircle className="w-7 h-7" />
-             </motion.a>
-             <motion.a 
-                initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.6, type: 'spring' }}
-                href={`tel:${pet.ownerPhone}`} 
-                className="w-14 h-14 bg-foreground text-background rounded-[20px] flex items-center justify-center shadow-lg shadow-black/20 hover:scale-110 active:scale-95 transition-transform"
-             >
-                <Phone className="w-7 h-7" />
-             </motion.a>
-           </>
-         )}
-      </div>
 
       {/* Hero Section */}
       <div className="relative w-full h-[45vh] sm:h-[500px]">
@@ -118,6 +95,44 @@ export function TagPublic({ pet, onUnlock }: { pet: Pet, onUnlock: (pin: string)
           </motion.p>
         </div>
       </div>
+
+      {/* Primary Call-to-Action: Call / WhatsApp */}
+      {pet.ownerPhone && (
+        <div className="px-6 -mt-6 relative z-20">
+          <motion.div
+            initial={{ y: 24, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2, type: 'spring', damping: 20 }}
+            className="max-w-2xl mx-auto bg-card/90 backdrop-blur-2xl border border-border/60 rounded-[24px] shadow-2xl shadow-black/10 p-5"
+          >
+            <p className="text-center font-extrabold text-lg tracking-tight mb-4 text-foreground">
+              📞 {t('callOwnerCta')}
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <motion.a
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.95 }}
+                href={`tel:${pet.ownerPhone}`}
+                className="h-20 bg-primary text-primary-foreground rounded-[20px] flex flex-col items-center justify-center gap-1 shadow-lg shadow-primary/30 active:shadow-md transition-shadow"
+              >
+                <Phone className="w-7 h-7" />
+                <span className="font-bold text-base tracking-wide">{t('callBtn')}</span>
+              </motion.a>
+              <motion.a
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.95 }}
+                href={whatsappLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="h-20 bg-[#25D366] text-white rounded-[20px] flex flex-col items-center justify-center gap-1 shadow-lg shadow-[#25D366]/40 active:shadow-md transition-shadow"
+              >
+                <MessageCircle className="w-7 h-7" />
+                <span className="font-bold text-base tracking-wide">{t('whatsappBtn')}</span>
+              </motion.a>
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       {/* Content Area */}
       <div className="px-6 py-8 space-y-24">

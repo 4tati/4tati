@@ -82,7 +82,10 @@ export const translations = {
     placeholderBreed: "e.g. Golden Retriever",
     placeholderBio: "e.g. Friendly but shy. Needs daily medication.",
     placeholderOwner: "e.g. Jane Doe",
-    placeholderPhone: "e.g. (555) 123-4567"
+    placeholderPhone: "e.g. (555) 123-4567",
+    callOwnerCta: "Call the Owner",
+    callBtn: "Call",
+    whatsappBtn: "WhatsApp"
   },
   ka: {
     appSlogan: "თქვენი საუკეთესო მეგობრის პრემიუმ ციფრული იდენტობა.",
@@ -163,7 +166,10 @@ export const translations = {
     placeholderBreed: "მაგ. ოქროსფერი რეტრივერი",
     placeholderBio: "მაგ. მეგობრული, მაგრამ მორცხვი.",
     placeholderOwner: "მაგ. გიორგი",
-    placeholderPhone: "მაგ. 555 12 34 56"
+    placeholderPhone: "მაგ. 555 12 34 56",
+    callOwnerCta: "დაურეკე პატრონს",
+    callBtn: "დარეკვა",
+    whatsappBtn: "WhatsApp"
   }
 };
 
