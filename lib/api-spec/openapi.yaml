@@ -10,6 +10,10 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: pets
+    description: Pet tag profile operations
+  - name: Storage
+    description: Object storage upload and serving endpoints.
 paths:
   /healthz:
     get:
@@ -24,6 +28,263 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /pets:
+    post:
+      operationId: createPetTag
+      tags: [pets]
+      summary: Create a new blank pet tag
+      description: Generates a new unclaimed pet tag record with a unique id, meant to be written onto a physical NFC tag.
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pet"
+  /pets/{tagId}:
+    get:
+      operationId: getPetTag
+      tags: [pets]
+      summary: Get a pet tag profile
+      description: Returns the public profile for a tag. Never includes the PIN.
+      parameters:
+        - name: tagId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pet"
+        "404":
+          description: Tag not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+    patch:
+      operationId: updatePetTag
+      tags: [pets]
+      summary: Update a claimed tag's profile
+      description: Updates profile fields on an already-claimed tag. Requires the correct PIN.
+      parameters:
+        - name: tagId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PetUpdateInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pet"
+        "403":
+          description: Incorrect PIN
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "404":
+          description: Tag not found or not yet claimed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /pets/{tagId}/claim:
+    post:
+      operationId: claimPetTag
+      tags: [pets]
+      summary: Claim and fill in an unclaimed tag
+      description: Fills in the pet's profile and owner details for the first time and locks it with a PIN. Fails if already claimed.
+      parameters:
+        - name: tagId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PetClaimInput"
+      responses:
+        "200":
+          description: Claimed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pet"
+        "404":
+          description: Tag not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "409":
+          description: Tag already claimed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /pets/{tagId}/verify-pin:
+    post:
+      operationId: verifyPetPin
+      tags: [pets]
+      summary: Verify a tag's edit PIN
+      description: Checks whether the given PIN unlocks editing for this tag, without making any changes.
+      parameters:
+        - name: tagId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PetPinInput"
+      responses:
+        "200":
+          description: Result of the PIN check
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PinCheckResult"
+        "404":
+          description: Tag not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /storage/uploads/request-url:
+    post:
+      tags: [Storage]
+      operationId: requestUploadUrl
+      summary: Request a presigned URL for file upload
+      description: |
+        Returns a presigned GCS URL for direct upload. The client sends JSON
+        metadata here, then uploads the file directly to the returned URL.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UploadUrlRequest"
+      responses:
+        "200":
+          description: Presigned upload URL generated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadUrlResponse"
+        "400":
+          description: Missing or invalid required fields.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "500":
+          description: Failed to generate upload URL.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /storage/public-objects/{filePath}:
+    get:
+      tags: [Storage]
+      operationId: getPublicObject
+      summary: Serve a public asset from PUBLIC_OBJECT_SEARCH_PATHS
+      description: |
+        Unconditionally public — no authentication or ACL checks.
+        Searches PUBLIC_OBJECT_SEARCH_PATHS for the given file path.
+      parameters:
+        - name: filePath
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Relative file path within the public search paths.
+      responses:
+        "200":
+          description: Object content streamed with correct Content-Type.
+          content:
+            "*/*":
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: File not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "500":
+          description: Failed to serve public object.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /storage/objects/{objectPath}:
+    get:
+      tags: [Storage]
+      operationId: getStorageObject
+      summary: Serve an object entity from PRIVATE_OBJECT_DIR
+      description: |
+        Serves object entities uploaded via presigned URLs. These can optionally
+        be protected with authentication or ACL checks based on the use case.
+      parameters:
+        - name: objectPath
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Object path within the private object dir (e.g. `uploads/some-uuid`).
+      responses:
+        "200":
+          description: Object content streamed with correct Content-Type.
+          content:
+            "*/*":
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: Object not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "500":
+          description: Failed to serve object.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +294,153 @@ components:
           type: string
       required:
         - status
-
+    Pet:
+      type: object
+      description: A pet tag profile. Never exposes the PIN.
+      required:
+        - id
+        - claimed
+        - name
+        - species
+        - breed
+        - description
+        - ownerName
+        - ownerPhone
+        - photoObjectPath
+        - createdAt
+        - claimedAt
+      properties:
+        id:
+          type: string
+          description: The tag's unique id, embedded in the NFC tag's URL.
+        claimed:
+          type: boolean
+          description: Whether an owner has filled in and locked this profile yet.
+        name:
+          type: ["string", "null"]
+        species:
+          type: ["string", "null"]
+          description: e.g. dog, cat
+        breed:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        ownerName:
+          type: ["string", "null"]
+        ownerPhone:
+          type: ["string", "null"]
+        photoObjectPath:
+          type: ["string", "null"]
+          description: Object storage path for the pet's photo, e.g. /objects/uploads/uuid.
+        createdAt:
+          type: string
+          format: date-time
+        claimedAt:
+          type: ["string", "null"]
+          format: date-time
+    PetClaimInput:
+      type: object
+      required:
+        - name
+        - species
+        - ownerPhone
+        - pin
+      properties:
+        name:
+          type: string
+          minLength: 1
+        species:
+          type: string
+          minLength: 1
+        breed:
+          type: string
+        description:
+          type: string
+        ownerName:
+          type: string
+        ownerPhone:
+          type: string
+          minLength: 1
+        photoObjectPath:
+          type: string
+        pin:
+          type: string
+          minLength: 4
+          maxLength: 8
+          description: A 4-8 digit/character PIN the owner will use to unlock editing later.
+    PetUpdateInput:
+      type: object
+      required:
+        - pin
+      properties:
+        pin:
+          type: string
+          minLength: 4
+          maxLength: 8
+        name:
+          type: string
+          minLength: 1
+        species:
+          type: string
+          minLength: 1
+        breed:
+          type: string
+        description:
+          type: string
+        ownerName:
+          type: string
+        ownerPhone:
+          type: string
+          minLength: 1
+        photoObjectPath:
+          type: string
+    PetPinInput:
+      type: object
+      required:
+        - pin
+      properties:
+        pin:
+          type: string
+          minLength: 4
+          maxLength: 8
+    PinCheckResult:
+      type: object
+      required:
+        - valid
+      properties:
+        valid:
+          type: boolean
+    UploadUrlRequest:
+      type: object
+      required: [name, size, contentType]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          description: Original file name.
+        size:
+          type: integer
+          minimum: 1
+          description: File size in bytes.
+        contentType:
+          type: string
+          minLength: 1
+          description: MIME type of the file (e.g. `image/jpeg`).
+    UploadUrlResponse:
+      type: object
+      required: [uploadURL, objectPath]
+      properties:
+        uploadURL:
+          type: string
+          description: Presigned GCS URL for PUT upload.
+        objectPath:
+          type: string
+          description: Normalized object path (e.g. `/objects/uploads/uuid`). Store this in your database.
+        metadata:
+          $ref: "#/components/schemas/UploadUrlRequest"
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string

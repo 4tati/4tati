@@ -1,0 +1,2 @@
+- [PIN-gated apps without accounts](pin-gated-access.md) — pattern for link+PIN access control instead of user auth; needs atomic claim + brute-force lockout to be safe.
+- [Vite CSS @import ordering](vite-css-import-order.md) — Google Fonts `@import url(...)` must precede `@import 'tailwindcss'` or Vite's CSS processor errors.

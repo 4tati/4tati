@@ -1,15 +1,17 @@
-# [Project name]
+# PetID Tags
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A web app for NFC pet ID tags: each physical tag links to a unique profile page where a found pet's photo, description, and owner's phone number are shown to whoever scans it.
 
 ## Run & Operate
 
 - `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/petid run dev` — run the PetID frontend
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 - Required env: `DATABASE_URL` — Postgres connection string
+- Object storage env: `DEFAULT_OBJECT_STORAGE_BUCKET_ID`, `PRIVATE_OBJECT_DIR`, `PUBLIC_OBJECT_SEARCH_PATHS`
 
 ## Stack
 
@@ -19,18 +21,30 @@ _Replace the heading above with the project's name, and this line with one sente
 - Validation: Zod (`zod/v4`), `drizzle-zod`
 - API codegen: Orval (from OpenAPI spec)
 - Build: esbuild (CJS bundle)
+- Frontend: React + Vite (`artifacts/petid`), wouter router, react-query, shadcn/radix UI
+- Object storage: Google Cloud Storage via Replit's App Storage sidecar
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- API contract: `lib/api-spec/openapi.yaml` (source of truth; run codegen after editing)
+- DB schema: `lib/db/src/schema/pets.ts`
+- Pet endpoints: `artifacts/api-server/src/routes/pets.ts`
+- Object storage endpoints: `artifacts/api-server/src/routes/storage.ts`
+- PIN hashing: `artifacts/api-server/src/lib/pin.ts`; brute-force lockout: `artifacts/api-server/src/lib/pinRateLimit.ts`
+- Frontend pages: `artifacts/petid/src/pages` (home + `/tag/:id` core page)
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- **No user accounts/auth.** Access model is public-link + a per-tag PIN. Anyone with the tag's URL can view the profile; only the PIN unlocks editing. This matches the domain (anyone can scan a physical tag) and was a deliberate choice not to add Replit Auth/Clerk.
+- **Claim is a one-time, atomic lock.** `POST /pets/:tagId/claim` updates the row only if `claimed=false` in the same statement, preventing two concurrent claims from both succeeding.
+- **PIN brute-force protection.** `verify-pin` and the `PATCH` (edit) endpoint lock out a tag+IP pair for 5 minutes after 5 failed attempts within a 5-minute window (in-memory, single-instance).
+- **Photo upload endpoint is intentionally unauthenticated** (no account system), but restricted server-side to `image/*` content types under 10MB to limit abuse of the open endpoint.
+- **Tag ids** are short (8-char), unambiguous-alphabet random strings meant to be embedded directly in the URL written to the physical NFC tag.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- Home page: create a new blank tag (generates a unique link for a physical NFC tag) or jump to an existing tag by id/URL. Recently created tags persist in the browser's `localStorage` for convenience.
+- `/tag/:tagId`: unclaimed tags show a setup form (photo, name, species, breed, description, owner contact, PIN) that locks the profile on submit. Claimed tags show a read-only public profile with a tap-to-call owner button, and an "Owner? Unlock to edit" affordance that PIN-gates an edit form.
 
 ## User preferences
 
@@ -38,7 +52,8 @@ _Populate as you build — explicit user instructions worth remembering across s
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Any change to `lib/api-spec/openapi.yaml` requires re-running `pnpm --filter @workspace/api-spec run codegen` before the generated hooks/schemas reflect it.
+- Font `@import` in `index.css` must come before the Tailwind `@import` statements or Vite's CSS processor errors.
 
 ## Pointers
 
