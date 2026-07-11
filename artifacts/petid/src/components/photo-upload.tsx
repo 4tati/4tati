@@ -3,6 +3,7 @@ import { usePhotoUpload } from "@/hooks/use-photo-upload";
 import { PetPhoto } from "./pet-photo";
 import { Button } from "@/components/ui/button";
 import { Camera, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface PhotoUploadProps {
   value: string | null;
@@ -30,10 +31,13 @@ export function PhotoUpload({ value, onChange }: PhotoUploadProps) {
   };
 
   return (
-    <div className="relative group rounded-2xl overflow-hidden aspect-square w-full max-w-sm mx-auto border-4 border-card-border">
+    <div className="relative group rounded-[32px] overflow-hidden aspect-square w-full max-w-xs mx-auto border-4 border-card bg-muted shadow-2xl shadow-black/10">
       <PetPhoto photoObjectPath={value} className="w-full h-full" />
       
-      <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className={cn(
+        "absolute inset-0 flex flex-col items-center justify-center bg-black/50 backdrop-blur-sm transition-all duration-300",
+        value && !isUploading ? "opacity-0 group-hover:opacity-100" : "opacity-100"
+      )}>
         <input 
           type="file" 
           ref={inputRef}
@@ -45,34 +49,23 @@ export function PhotoUpload({ value, onChange }: PhotoUploadProps) {
         <Button 
           type="button"
           variant="secondary" 
-          size="sm"
           disabled={isUploading}
           onClick={() => inputRef.current?.click()}
-          className="shadow-xl"
+          className="shadow-xl rounded-full h-14 px-6 text-base font-bold bg-white text-black hover:bg-gray-100 border-0"
         >
           {isUploading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-3 h-5 w-5 animate-spin" />
               Uploading {progress}%
             </>
           ) : (
             <>
-              <Camera className="mr-2 h-4 w-4" />
+              <Camera className="mr-3 h-5 w-5" />
               {value ? "Change Photo" : "Upload Photo"}
             </>
           )}
         </Button>
       </div>
-      
-      {/* Show uploading overlay even when not hovered if active */}
-      {isUploading && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40">
-           <Button type="button" variant="secondary" size="sm" disabled className="shadow-xl">
-             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-             Uploading {progress}%
-           </Button>
-        </div>
-      )}
     </div>
   );
 }
