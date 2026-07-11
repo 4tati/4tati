@@ -8,12 +8,14 @@ import { Search, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocalTags } from "@/hooks/use-local-tags";
 import { motion } from "framer-motion";
+import { useLanguage } from "@/lib/i18n";
 
 export default function Tag() {
   const params = useParams();
   const tagId = params.id as string;
   const [unlockPin, setUnlockPin] = useState<string | null>(null);
   const { addTag } = useLocalTags();
+  const { t } = useLanguage();
 
   const { data: pet, isLoading, error } = useGetPetTag(tagId, {
     query: {
@@ -48,13 +50,13 @@ export default function Tag() {
         </motion.div>
         
         <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }} className="space-y-3 max-w-sm">
-          <h1 className="text-3xl font-serif font-extrabold text-foreground tracking-tight">Tag Not Found</h1>
-          <p className="text-lg text-muted-foreground font-medium">This tag hasn't been created yet or doesn't exist.</p>
+          <h1 className="text-3xl font-serif font-extrabold text-foreground tracking-tight">{t('tagNotFoundTitle')}</h1>
+          <p className="text-lg text-muted-foreground font-medium">{t('tagNotFoundDesc')}</p>
         </motion.div>
         
         <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}>
           <Link href="/">
-            <Button className="h-14 px-8 rounded-[20px] text-lg font-semibold shadow-lg">Back to Home</Button>
+            <Button className="h-14 px-8 rounded-[20px] text-lg font-semibold shadow-lg">{t('backToHome')}</Button>
           </Link>
         </motion.div>
       </div>

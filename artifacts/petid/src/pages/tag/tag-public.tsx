@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { useVerifyPetPin } from "@workspace/api-client-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n";
 
 type TabType = "home" | "medical" | "gallery" | "owner" | "play";
 
@@ -15,11 +16,45 @@ export function TagPublic({ pet, onUnlock }: { pet: Pet, onUnlock: (pin: string)
   const [showUnlock, setShowUnlock] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>("home");
   const [isLost, setIsLost] = useState(false);
+  const { t } = useLanguage();
 
   useEffect(() => {
     // Read local mock state for LOST status
     setIsLost(localStorage.getItem(`pet_lost_${pet.id}`) === 'true');
   }, [pet.id]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visibleEntries = entries.filter(e => e.isIntersecting);
+        if (visibleEntries.length > 0) {
+          visibleEntries.sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+          const id = visibleEntries[0].target.id.replace('section-', '') as TabType;
+          setActiveTab(id);
+        }
+      },
+      {
+        root: null,
+        rootMargin: "-20% 0px -20% 0px",
+        threshold: [0.1, 0.5, 0.9]
+      }
+    );
+
+    const sections = ['home', 'medical', 'gallery', 'owner', 'play'].map(id => document.getElementById(`section-${id}`));
+    sections.forEach(sec => {
+      if (sec) observer.observe(sec);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  const scrollTo = (id: TabType) => {
+    setActiveTab(id);
+    const el = document.getElementById(`section-${id}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   const whatsappLink = pet.ownerPhone ? `https://wa.me/${pet.ownerPhone.replace(/\D/g, '')}` : "#";
 
@@ -58,10 +93,10 @@ export function TagPublic({ pet, onUnlock }: { pet: Pet, onUnlock: (pin: string)
           <motion.div 
             initial={{ y: -50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="absolute top-6 left-6 right-6 bg-destructive text-white px-5 py-4 rounded-[20px] flex items-center justify-center gap-3 shadow-2xl shadow-destructive/40"
+            className="absolute top-6 left-6 right-6 bg-destructive text-white px-5 py-4 rounded-[20px] flex items-center justify-center gap-3 shadow-2xl shadow-destructive/40 z-10"
           >
              <AlertTriangle className="w-6 h-6 animate-pulse" />
-             <span className="font-extrabold tracking-widest text-lg">MISSING PET</span>
+             <span className="font-extrabold tracking-widest text-lg uppercase">{t('missingPet')}</span>
           </motion.div>
         )}
 
@@ -79,38 +114,41 @@ export function TagPublic({ pet, onUnlock }: { pet: Pet, onUnlock: (pin: string)
              transition={{ delay: 0.1 }}
              className="text-xl font-medium text-white/90 capitalize drop-shadow-md"
           >
-            {pet.breed ? `${pet.breed} • ${pet.species}` : pet.species}
+            {pet.breed ? `${pet.breed} • ${pet.species}` : (pet.species || t('unknown'))}
           </motion.p>
         </div>
       </div>
 
       {/* Content Area */}
-      <div className="px-6 py-8">
-         <AnimatePresence mode="wait">
-            <motion.div 
-               key={activeTab} 
-               initial={{ opacity: 0, y: 15 }} 
-               animate={{ opacity: 1, y: 0 }} 
-               exit={{ opacity: 0, y: -15 }}
-               transition={{ duration: 0.2 }}
-               className="max-w-2xl mx-auto"
-            >
-               {activeTab === 'home' && <HomeTab pet={pet} onUnlock={() => setShowUnlock(true)} />}
-               {activeTab === 'medical' && <MedicalTab />}
-               {activeTab === 'gallery' && <GalleryTab pet={pet} />}
-               {activeTab === 'owner' && <OwnerTab pet={pet} />}
-               {activeTab === 'play' && <PlayTab pet={pet} />}
-            </motion.div>
-         </AnimatePresence>
+      <div className="px-6 py-8 space-y-24">
+         <section id="section-home" className="max-w-2xl mx-auto scroll-mt-24">
+            <HomeTab pet={pet} onUnlock={() => setShowUnlock(true)} />
+         </section>
+
+         <section id="section-medical" className="max-w-2xl mx-auto scroll-mt-24">
+            <MedicalTab />
+         </section>
+
+         <section id="section-gallery" className="max-w-2xl mx-auto scroll-mt-24">
+            <GalleryTab pet={pet} />
+         </section>
+
+         <section id="section-owner" className="max-w-2xl mx-auto scroll-mt-24">
+            <OwnerTab pet={pet} />
+         </section>
+
+         <section id="section-play" className="max-w-2xl mx-auto scroll-mt-24 pb-20">
+            <PlayTab pet={pet} />
+         </section>
       </div>
 
       {/* Bottom Navigation */}
       <div className="fixed bottom-6 left-4 right-4 sm:left-1/2 sm:-translate-x-1/2 sm:w-[500px] bg-background/80 backdrop-blur-2xl border border-border/50 shadow-2xl rounded-[32px] p-2 flex items-center justify-between z-50">
-         <NavItem icon={Home} label="Home" isActive={activeTab === 'home'} onClick={() => setActiveTab('home')} />
-         <NavItem icon={Stethoscope} label="Medical" isActive={activeTab === 'medical'} onClick={() => setActiveTab('medical')} />
-         <NavItem icon={ImageIcon} label="Gallery" isActive={activeTab === 'gallery'} onClick={() => setActiveTab('gallery')} />
-         <NavItem icon={User} label="Owner" isActive={activeTab === 'owner'} onClick={() => setActiveTab('owner')} />
-         <NavItem icon={Heart} label="Play" isActive={activeTab === 'play'} onClick={() => setActiveTab('play')} />
+         <NavItem icon={Home} label={t('navHome')} isActive={activeTab === 'home'} onClick={() => scrollTo('home')} />
+         <NavItem icon={Stethoscope} label={t('navMedical')} isActive={activeTab === 'medical'} onClick={() => scrollTo('medical')} />
+         <NavItem icon={ImageIcon} label={t('navGallery')} isActive={activeTab === 'gallery'} onClick={() => scrollTo('gallery')} />
+         <NavItem icon={User} label={t('navOwner')} isActive={activeTab === 'owner'} onClick={() => scrollTo('owner')} />
+         <NavItem icon={Heart} label={t('navPlay')} isActive={activeTab === 'play'} onClick={() => scrollTo('play')} />
       </div>
       
       <UnlockDialog 
@@ -126,6 +164,7 @@ export function TagPublic({ pet, onUnlock }: { pet: Pet, onUnlock: (pin: string)
 // --- Tabs Content ---
 
 function HomeTab({ pet, onUnlock }: { pet: Pet, onUnlock: () => void }) {
+  const { t } = useLanguage();
   return (
     <div className="space-y-8">
       {pet.description && (
@@ -137,24 +176,24 @@ function HomeTab({ pet, onUnlock }: { pet: Pet, onUnlock: () => void }) {
       
       <div className="grid grid-cols-2 gap-4">
          <div className="bg-card border border-border p-5 rounded-[24px] shadow-sm">
-            <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">Species</h4>
-            <p className="text-lg font-semibold text-foreground capitalize">{pet.species || "Unknown"}</p>
+            <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">{t('speciesLabel')}</h4>
+            <p className="text-lg font-semibold text-foreground capitalize">{pet.species || t('unknown')}</p>
          </div>
          <div className="bg-card border border-border p-5 rounded-[24px] shadow-sm">
-            <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">Status</h4>
+            <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">{t('statusLabel')}</h4>
             <p className="text-lg font-semibold text-accent flex items-center gap-1">
-               <ShieldCheck className="w-5 h-5" /> Secured
+               <ShieldCheck className="w-5 h-5" /> {t('statusSecured')}
             </p>
          </div>
       </div>
 
-      <div className="pt-12 flex justify-center pb-8">
+      <div className="pt-8 flex justify-center pb-2">
         <button 
           onClick={onUnlock}
           className="inline-flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-colors px-4 py-2 rounded-full hover:bg-muted"
         >
           <Lock className="w-4 h-4" />
-          Owner Login
+          {t('ownerLogin')}
         </button>
       </div>
     </div>
@@ -162,9 +201,10 @@ function HomeTab({ pet, onUnlock }: { pet: Pet, onUnlock: () => void }) {
 }
 
 function MedicalTab() {
+  const { t } = useLanguage();
   return (
     <div className="space-y-6">
-      <h2 className="text-3xl font-serif font-extrabold tracking-tight">Medical History</h2>
+      <h2 className="text-3xl font-serif font-extrabold tracking-tight">{t('medicalHistory')}</h2>
       
       <div className="space-y-4">
          <div className="bg-card border border-border p-5 rounded-[24px] shadow-sm flex items-start gap-4">
@@ -172,8 +212,8 @@ function MedicalTab() {
                <Syringe className="w-6 h-6 text-blue-500" />
             </div>
             <div>
-               <h3 className="font-bold text-lg">Vaccinations</h3>
-               <p className="text-muted-foreground font-medium mt-1">Up to date. Last checked 2 months ago (Rabies, DHPP).</p>
+               <h3 className="font-bold text-lg">{t('vaccinationsTitle')}</h3>
+               <p className="text-muted-foreground font-medium mt-1">{t('vaccinationsDesc')}</p>
             </div>
          </div>
 
@@ -182,8 +222,8 @@ function MedicalTab() {
                <AlertTriangle className="w-6 h-6 text-secondary-foreground" />
             </div>
             <div>
-               <h3 className="font-bold text-lg">Allergies</h3>
-               <p className="text-muted-foreground font-medium mt-1">Grains, Chicken. Requires specialized diet.</p>
+               <h3 className="font-bold text-lg">{t('allergiesTitle')}</h3>
+               <p className="text-muted-foreground font-medium mt-1">{t('allergiesDesc')}</p>
             </div>
          </div>
 
@@ -192,8 +232,8 @@ function MedicalTab() {
                <Stethoscope className="w-6 h-6 text-primary" />
             </div>
             <div>
-               <h3 className="font-bold text-lg">Primary Vet</h3>
-               <p className="text-muted-foreground font-medium mt-1">Dr. Sarah Jenkins<br/>(555) 987-6543</p>
+               <h3 className="font-bold text-lg">{t('primaryVetTitle')}</h3>
+               <p className="text-muted-foreground font-medium mt-1 whitespace-pre-line">{t('primaryVetDesc')}</p>
             </div>
          </div>
       </div>
@@ -202,9 +242,10 @@ function MedicalTab() {
 }
 
 function GalleryTab({ pet }: { pet: Pet }) {
+  const { t } = useLanguage();
   return (
     <div className="space-y-6">
-      <h2 className="text-3xl font-serif font-extrabold tracking-tight">Gallery</h2>
+      <h2 className="text-3xl font-serif font-extrabold tracking-tight">{t('galleryTitle')}</h2>
       <div className="grid grid-cols-2 gap-3">
          <div className="aspect-square rounded-[24px] overflow-hidden bg-muted shadow-sm">
            <PetPhoto photoObjectPath={pet.photoObjectPath} className="w-full h-full object-cover" />
@@ -225,9 +266,10 @@ function GalleryTab({ pet }: { pet: Pet }) {
 }
 
 function OwnerTab({ pet }: { pet: Pet }) {
+  const { t } = useLanguage();
   return (
     <div className="space-y-6">
-      <h2 className="text-3xl font-serif font-extrabold tracking-tight">Owner Contact</h2>
+      <h2 className="text-3xl font-serif font-extrabold tracking-tight">{t('ownerContactTitle')}</h2>
       
       <div className="bg-card border border-border p-6 rounded-[32px] shadow-xl text-center space-y-6 mt-4">
          <div className="w-20 h-20 bg-muted rounded-[24px] mx-auto flex items-center justify-center shadow-inner rotate-3">
@@ -235,8 +277,8 @@ function OwnerTab({ pet }: { pet: Pet }) {
          </div>
          
          <div className="space-y-1">
-            <h3 className="text-2xl font-bold">{pet.ownerName || "Pet Parent"}</h3>
-            <p className="text-muted-foreground font-medium">Loving owner of {pet.name}</p>
+            <h3 className="text-2xl font-bold">{pet.ownerName || t('petParent')}</h3>
+            <p className="text-muted-foreground font-medium">{t('lovingOwnerOf')} {pet.name}</p>
          </div>
 
          <div className="pt-6 border-t border-border flex flex-col gap-3">
@@ -252,12 +294,13 @@ function OwnerTab({ pet }: { pet: Pet }) {
 
 function PlayTab({ pet }: { pet: Pet }) {
   const [happiness, setHappiness] = useState(30);
+  const { t } = useLanguage();
 
   return (
     <div className="space-y-8 flex flex-col items-center text-center">
        <div className="space-y-2">
-         <h2 className="text-3xl font-serif font-extrabold tracking-tight">Playtime</h2>
-         <p className="text-muted-foreground font-medium">Keep {pet.name} happy!</p>
+         <h2 className="text-3xl font-serif font-extrabold tracking-tight">{t('playtimeTitle')}</h2>
+         <p className="text-muted-foreground font-medium">{t('playtimeDesc', { name: pet.name || '' })}</p>
        </div>
 
        <div className="w-48 h-48 rounded-full bg-secondary/10 flex items-center justify-center relative shadow-inner p-2 border-4 border-white dark:border-white/10 shadow-2xl">
@@ -280,7 +323,7 @@ function PlayTab({ pet }: { pet: Pet }) {
 
        <div className="w-full max-w-sm space-y-3">
           <div className="flex justify-between text-sm font-bold uppercase tracking-widest text-muted-foreground">
-             <span>Mood</span>
+             <span>{t('moodLabel')}</span>
              <span>{happiness}%</span>
           </div>
           <div className="w-full bg-muted rounded-full h-5 overflow-hidden border border-border shadow-inner p-1">
@@ -293,10 +336,10 @@ function PlayTab({ pet }: { pet: Pet }) {
 
        <div className="flex gap-4 w-full max-w-sm pt-4">
           <Button onClick={() => setHappiness(Math.min(100, happiness + 15))} className="flex-1 h-16 rounded-[20px] text-lg font-bold shadow-lg bg-secondary text-secondary-foreground hover:bg-secondary/90 active:scale-95">
-             <Bone className="mr-2 w-6 h-6" /> Treat
+             <Bone className="mr-2 w-6 h-6" /> {t('treatBtn')}
           </Button>
           <Button onClick={() => setHappiness(Math.min(100, happiness + 25))} className="flex-1 h-16 rounded-[20px] text-lg font-bold shadow-lg active:scale-95">
-             <Activity className="mr-2 w-6 h-6" /> Play
+             <Activity className="mr-2 w-6 h-6" /> {t('playBtn')}
           </Button>
        </div>
     </div>
@@ -330,6 +373,7 @@ function UnlockDialog({ petId, open, onOpenChange, onSuccess }: { petId: string,
   const [pin, setPin] = useState("");
   const verifyPin = useVerifyPetPin();
   const [error, setError] = useState("");
+  const { t } = useLanguage();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -343,10 +387,10 @@ function UnlockDialog({ petId, open, onOpenChange, onSuccess }: { petId: string,
         setPin("");
         setError("");
       } else {
-        setError("Incorrect PIN");
+        setError(t('incorrectPin'));
       }
     } catch (err) {
-      setError("Failed to verify PIN. Please try again.");
+      setError(t('failedVerifyPin'));
     }
   };
 
@@ -363,9 +407,9 @@ function UnlockDialog({ petId, open, onOpenChange, onSuccess }: { petId: string,
           <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-2">
              <Lock className="w-8 h-8 text-foreground" />
           </div>
-          <DialogTitle className="text-2xl font-serif text-center">Owner Access</DialogTitle>
+          <DialogTitle className="text-2xl font-serif text-center">{t('ownerAccess')}</DialogTitle>
           <DialogDescription className="text-center font-medium text-base">
-            Enter the PIN you set when creating this tag.
+            {t('enterPinDesc')}
           </DialogDescription>
         </DialogHeader>
         
@@ -384,7 +428,7 @@ function UnlockDialog({ petId, open, onOpenChange, onSuccess }: { petId: string,
             {error && <p className="text-sm font-bold text-destructive text-center">{error}</p>}
           </div>
           <Button type="submit" className="w-full h-16 text-lg font-bold rounded-[20px] shadow-xl" disabled={verifyPin.isPending || pin.length < 4}>
-            {verifyPin.isPending ? "Verifying..." : "Unlock Profile"}
+            {verifyPin.isPending ? t('verifying') : t('unlockProfile')}
           </Button>
         </form>
       </DialogContent>

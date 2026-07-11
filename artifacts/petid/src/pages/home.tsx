@@ -8,12 +8,14 @@ import { useLocation } from "wouter";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
+import { useLanguage } from "@/lib/i18n";
 
 export default function Home() {
   const { tags } = useLocalTags();
   const [, setLocation] = useLocation();
   const createTag = useCreatePetTag();
   const [searchId, setSearchId] = useState("");
+  const { t } = useLanguage();
 
   const handleCreate = async () => {
     try {
@@ -60,7 +62,7 @@ export default function Home() {
           </div>
           <h1 className="text-5xl font-serif text-foreground font-extrabold tracking-tight">4Tati</h1>
           <p className="text-lg text-muted-foreground max-w-[280px] mx-auto font-medium leading-relaxed">
-            The premium digital identity for your best friend.
+            {t('appSlogan')}
           </p>
         </motion.div>
 
@@ -76,9 +78,9 @@ export default function Home() {
               disabled={createTag.isPending}
               className="w-full h-16 text-lg rounded-[20px] font-semibold bg-foreground text-background hover:bg-foreground/90 transition-transform active:scale-[0.98] shadow-lg"
             >
-              {createTag.isPending ? "Setting up..." : (
+              {createTag.isPending ? t('settingUp') : (
                 <span className="flex items-center gap-2">
-                  <Sparkles className="w-5 h-5" /> Setup a New Tag
+                  <Sparkles className="w-5 h-5" /> {t('setupNewTag')}
                 </span>
               )}
             </Button>
@@ -89,7 +91,7 @@ export default function Home() {
               <span className="w-full border-t border-border/60" />
             </div>
             <div className="relative flex justify-center text-xs font-semibold uppercase tracking-widest">
-              <span className="bg-transparent px-4 text-muted-foreground/60 backdrop-blur-md">Or find existing</span>
+              <span className="bg-transparent px-4 text-muted-foreground/60 backdrop-blur-md">{t('orFindExisting')}</span>
             </div>
           </div>
 
@@ -97,7 +99,7 @@ export default function Home() {
             <Input 
               value={searchId}
               onChange={e => setSearchId(e.target.value)}
-              placeholder="Tag ID or URL" 
+              placeholder={t('tagIdOrUrl')} 
               className="flex-1 h-14 rounded-[20px] bg-background/50 border-white/50 focus-visible:ring-primary/50 text-base"
             />
             <Button type="submit" variant="secondary" className="px-6 h-14 rounded-[20px] bg-secondary text-secondary-foreground hover:bg-secondary/90 transition-transform active:scale-95 shadow-md">
@@ -113,7 +115,7 @@ export default function Home() {
             transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
             className="space-y-5"
           >
-            <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground/80 px-2 text-center">Your Pets</h2>
+            <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground/80 px-2 text-center">{t('yourPets')}</h2>
             <div className="space-y-3">
               {tags.map(tag => (
                 <Link key={tag.id} href={`/tag/${tag.id}`} className="block">

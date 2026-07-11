@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2, ArrowLeft, AlertTriangle } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useLanguage } from "@/lib/i18n";
 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -31,6 +32,7 @@ export function TagEdit({ pet, pin, onCancel, onSaved }: { pet: Pet, pin: string
   const queryClient = useQueryClient();
   const updateTag = useUpdatePetTag();
   const [isLost, setIsLost] = useState(false);
+  const { t } = useLanguage();
   
   useEffect(() => {
     setIsLost(localStorage.getItem(`pet_lost_${pet.id}`) === 'true');
@@ -66,10 +68,10 @@ export function TagEdit({ pet, pin, onCancel, onSaved }: { pet: Pet, pin: string
       });
       
       queryClient.setQueryData(getGetPetTagQueryKey(pet.id), updatedPet);
-      toast.success("Profile updated successfully!");
+      toast.success(t('profileUpdated'));
       onSaved();
     } catch (err) {
-      toast.error("Failed to update profile. Please try again.");
+      toast.error(t('failedUpdate'));
     }
   };
 
@@ -81,8 +83,8 @@ export function TagEdit({ pet, pin, onCancel, onSaved }: { pet: Pet, pin: string
             <ArrowLeft className="w-6 h-6" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-2xl font-serif font-extrabold tracking-tight">Edit Profile</h1>
-            <p className="text-sm font-medium text-muted-foreground">Updating {pet.name}'s tag</p>
+            <h1 className="text-2xl font-serif font-extrabold tracking-tight">{t('editProfile')}</h1>
+            <p className="text-sm font-medium text-muted-foreground">{t('updatingTag', { name: pet.name || '' })}</p>
           </div>
         </div>
 
@@ -90,16 +92,16 @@ export function TagEdit({ pet, pin, onCancel, onSaved }: { pet: Pet, pin: string
            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between p-6 rounded-[24px] border border-destructive/20 bg-destructive/5 shadow-inner">
              <div className="space-y-1">
                 <h3 className="font-bold text-lg text-destructive flex items-center gap-2">
-                   <AlertTriangle className="w-5 h-5" /> Report Missing
+                   <AlertTriangle className="w-5 h-5" /> {t('reportMissing')}
                 </h3>
-                <p className="text-sm font-medium text-destructive/80">Turn this on to display an emergency banner</p>
+                <p className="text-sm font-medium text-destructive/80">{t('reportMissingDesc')}</p>
              </div>
              <Switch 
                 checked={isLost} 
                 onCheckedChange={(v) => {
                    setIsLost(v);
                    localStorage.setItem(`pet_lost_${pet.id}`, String(v));
-                   toast(v ? "Emergency banner activated" : "Emergency banner removed");
+                   toast(v ? t('bannerActivated') : t('bannerRemoved'));
                 }} 
              />
            </motion.div>
@@ -108,7 +110,7 @@ export function TagEdit({ pet, pin, onCancel, onSaved }: { pet: Pet, pin: string
              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
                <div className="space-y-10">
                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="space-y-4 text-center">
-                   <FormLabel className="text-muted-foreground font-bold uppercase tracking-widest text-xs">Pet Photo</FormLabel>
+                   <FormLabel className="text-muted-foreground font-bold uppercase tracking-widest text-xs">{t('petProfilePhoto')}</FormLabel>
                    <FormField
                      control={form.control}
                      name="photoObjectPath"
@@ -127,16 +129,16 @@ export function TagEdit({ pet, pin, onCancel, onSaved }: { pet: Pet, pin: string
                  </motion.div>
 
                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="space-y-6">
-                   <h3 className="text-2xl font-serif font-bold text-foreground">Pet Details</h3>
+                   <h3 className="text-2xl font-serif font-bold text-foreground">{t('petDetails')}</h3>
                    
                    <FormField
                      control={form.control}
                      name="name"
                      render={({ field }) => (
                        <FormItem>
-                         <FormLabel className="font-semibold text-foreground/80">Pet's Name *</FormLabel>
+                         <FormLabel className="font-semibold text-foreground/80">{t('petsName')}</FormLabel>
                          <FormControl>
-                           <Input placeholder="e.g. Bella" className="h-14 rounded-[20px] text-lg bg-muted/50 border-transparent focus-visible:bg-background focus-visible:border-primary/50" {...field} />
+                           <Input placeholder={t('placeholderName')} className="h-14 rounded-[20px] text-lg bg-muted/50 border-transparent focus-visible:bg-background focus-visible:border-primary/50" {...field} />
                          </FormControl>
                          <FormMessage />
                        </FormItem>
@@ -149,9 +151,9 @@ export function TagEdit({ pet, pin, onCancel, onSaved }: { pet: Pet, pin: string
                        name="species"
                        render={({ field }) => (
                          <FormItem>
-                           <FormLabel className="font-semibold text-foreground/80">Species *</FormLabel>
+                           <FormLabel className="font-semibold text-foreground/80">{t('speciesReq')}</FormLabel>
                            <FormControl>
-                             <Input placeholder="e.g. Dog, Cat" className="h-14 rounded-[20px] text-lg bg-muted/50 border-transparent focus-visible:bg-background focus-visible:border-primary/50" {...field} />
+                             <Input placeholder={t('placeholderSpecies')} className="h-14 rounded-[20px] text-lg bg-muted/50 border-transparent focus-visible:bg-background focus-visible:border-primary/50" {...field} />
                            </FormControl>
                            <FormMessage />
                          </FormItem>
@@ -162,9 +164,9 @@ export function TagEdit({ pet, pin, onCancel, onSaved }: { pet: Pet, pin: string
                        name="breed"
                        render={({ field }) => (
                          <FormItem>
-                           <FormLabel className="font-semibold text-foreground/80">Breed</FormLabel>
+                           <FormLabel className="font-semibold text-foreground/80">{t('breed')}</FormLabel>
                            <FormControl>
-                             <Input placeholder="e.g. Golden Retriever" className="h-14 rounded-[20px] text-lg bg-muted/50 border-transparent focus-visible:bg-background focus-visible:border-primary/50" {...field} />
+                             <Input placeholder={t('placeholderBreed')} className="h-14 rounded-[20px] text-lg bg-muted/50 border-transparent focus-visible:bg-background focus-visible:border-primary/50" {...field} />
                            </FormControl>
                            <FormMessage />
                          </FormItem>
@@ -177,10 +179,10 @@ export function TagEdit({ pet, pin, onCancel, onSaved }: { pet: Pet, pin: string
                      name="description"
                      render={({ field }) => (
                        <FormItem>
-                         <FormLabel className="font-semibold text-foreground/80">Description / Medical Needs</FormLabel>
+                         <FormLabel className="font-semibold text-foreground/80">{t('bioSpecialNeeds')}</FormLabel>
                          <FormControl>
                            <Textarea 
-                             placeholder="e.g. Friendly but shy. Needs daily medication." 
+                             placeholder={t('placeholderBio')} 
                              className="min-h-[120px] rounded-[20px] text-lg bg-muted/50 border-transparent focus-visible:bg-background focus-visible:border-primary/50 resize-none p-4"
                              {...field} 
                            />
@@ -192,16 +194,16 @@ export function TagEdit({ pet, pin, onCancel, onSaved }: { pet: Pet, pin: string
                  </motion.div>
 
                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="space-y-6 pt-6 border-t border-border">
-                   <h3 className="text-2xl font-serif font-bold text-foreground">Owner Details</h3>
+                   <h3 className="text-2xl font-serif font-bold text-foreground">{t('ownerDetails')}</h3>
                    
                    <FormField
                      control={form.control}
                      name="ownerName"
                      render={({ field }) => (
                        <FormItem>
-                         <FormLabel className="font-semibold text-foreground/80">Your Name</FormLabel>
+                         <FormLabel className="font-semibold text-foreground/80">{t('yourName')}</FormLabel>
                          <FormControl>
-                           <Input placeholder="e.g. Jane Doe" className="h-14 rounded-[20px] text-lg bg-muted/50 border-transparent focus-visible:bg-background focus-visible:border-primary/50" {...field} />
+                           <Input placeholder={t('placeholderOwner')} className="h-14 rounded-[20px] text-lg bg-muted/50 border-transparent focus-visible:bg-background focus-visible:border-primary/50" {...field} />
                          </FormControl>
                          <FormMessage />
                        </FormItem>
@@ -213,9 +215,9 @@ export function TagEdit({ pet, pin, onCancel, onSaved }: { pet: Pet, pin: string
                      name="ownerPhone"
                      render={({ field }) => (
                        <FormItem>
-                         <FormLabel className="font-semibold text-foreground/80">Phone Number *</FormLabel>
+                         <FormLabel className="font-semibold text-foreground/80">{t('phoneNumber')}</FormLabel>
                          <FormControl>
-                           <Input type="tel" placeholder="e.g. (555) 123-4567" className="h-14 rounded-[20px] text-lg bg-muted/50 border-transparent focus-visible:bg-background focus-visible:border-primary/50" {...field} />
+                           <Input type="tel" placeholder={t('placeholderPhone')} className="h-14 rounded-[20px] text-lg bg-muted/50 border-transparent focus-visible:bg-background focus-visible:border-primary/50" {...field} />
                          </FormControl>
                          <FormMessage />
                        </FormItem>
@@ -233,10 +235,10 @@ export function TagEdit({ pet, pin, onCancel, onSaved }: { pet: Pet, pin: string
                    {updateTag.isPending ? (
                      <>
                        <Loader2 className="w-6 h-6 mr-3 animate-spin" />
-                       Saving...
+                       {t('saving')}
                      </>
                    ) : (
-                     "Save Changes"
+                     t('saveChanges')
                    )}
                  </Button>
                </motion.div>

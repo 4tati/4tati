@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ShieldCheck, Loader2, Sparkles, Lock } from "lucide-react";
 import { motion } from "framer-motion";
+import { useLanguage } from "@/lib/i18n";
 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -29,12 +30,13 @@ type ClaimValues = z.infer<typeof claimSchema>;
 export function TagUnclaimed({ pet }: { pet: Pet }) {
   const queryClient = useQueryClient();
   const claimTag = useClaimPetTag();
+  const { t } = useLanguage();
   
   const form = useForm<ClaimValues>({
     resolver: zodResolver(claimSchema),
     defaultValues: {
       name: "",
-      species: "Dog",
+      species: "",
       breed: "",
       description: "",
       ownerName: "",
@@ -57,10 +59,10 @@ export function TagUnclaimed({ pet }: { pet: Pet }) {
         }
       });
       
-      toast.success("Profile created and locked!");
+      toast.success(t('profileCreated'));
       queryClient.invalidateQueries({ queryKey: getGetPetTagQueryKey(pet.id) });
     } catch (err) {
-      toast.error("Failed to claim tag. It might already be claimed.");
+      toast.error(t('failedClaim'));
     }
   };
 
@@ -82,7 +84,7 @@ export function TagUnclaimed({ pet }: { pet: Pet }) {
             transition={{ delay: 0.1 }}
             className="text-4xl font-serif font-extrabold tracking-tight relative z-10"
           >
-            Welcome to 4Tati
+            {t('welcomeTitle')}
           </motion.h1>
           <motion.p 
             initial={{ y: 10, opacity: 0 }} 
@@ -90,7 +92,7 @@ export function TagUnclaimed({ pet }: { pet: Pet }) {
             transition={{ delay: 0.2 }}
             className="text-background/80 text-lg max-w-sm mx-auto font-medium relative z-10"
           >
-            Let's create a beautiful digital profile for your pet.
+            {t('welcomeDesc')}
           </motion.p>
         </div>
 
@@ -103,7 +105,7 @@ export function TagUnclaimed({ pet }: { pet: Pet }) {
                 transition={{ delay: 0.3 }}
                 className="space-y-4 text-center"
               >
-                <FormLabel className="text-muted-foreground font-bold uppercase tracking-widest text-xs">Pet Profile Photo</FormLabel>
+                <FormLabel className="text-muted-foreground font-bold uppercase tracking-widest text-xs">{t('petProfilePhoto')}</FormLabel>
                 <FormField
                   control={form.control}
                   name="photoObjectPath"
@@ -122,16 +124,16 @@ export function TagUnclaimed({ pet }: { pet: Pet }) {
               </motion.div>
 
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="space-y-6">
-                <h3 className="text-2xl font-serif font-bold text-foreground">About Them</h3>
+                <h3 className="text-2xl font-serif font-bold text-foreground">{t('aboutThem')}</h3>
                 
                 <FormField
                   control={form.control}
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="font-semibold text-foreground/80">Pet's Name *</FormLabel>
+                      <FormLabel className="font-semibold text-foreground/80">{t('petsName')}</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. Bella" className="h-14 rounded-[20px] text-lg bg-muted/50 border-transparent focus-visible:bg-background focus-visible:border-primary/50" {...field} />
+                        <Input placeholder={t('placeholderName')} className="h-14 rounded-[20px] text-lg bg-muted/50 border-transparent focus-visible:bg-background focus-visible:border-primary/50" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -144,9 +146,9 @@ export function TagUnclaimed({ pet }: { pet: Pet }) {
                     name="species"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="font-semibold text-foreground/80">Species *</FormLabel>
+                        <FormLabel className="font-semibold text-foreground/80">{t('speciesReq')}</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g. Dog, Cat" className="h-14 rounded-[20px] text-lg bg-muted/50 border-transparent focus-visible:bg-background focus-visible:border-primary/50" {...field} />
+                          <Input placeholder={t('placeholderSpecies')} className="h-14 rounded-[20px] text-lg bg-muted/50 border-transparent focus-visible:bg-background focus-visible:border-primary/50" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -157,9 +159,9 @@ export function TagUnclaimed({ pet }: { pet: Pet }) {
                     name="breed"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="font-semibold text-foreground/80">Breed</FormLabel>
+                        <FormLabel className="font-semibold text-foreground/80">{t('breed')}</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g. Golden Retriever" className="h-14 rounded-[20px] text-lg bg-muted/50 border-transparent focus-visible:bg-background focus-visible:border-primary/50" {...field} />
+                          <Input placeholder={t('placeholderBreed')} className="h-14 rounded-[20px] text-lg bg-muted/50 border-transparent focus-visible:bg-background focus-visible:border-primary/50" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -172,10 +174,10 @@ export function TagUnclaimed({ pet }: { pet: Pet }) {
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="font-semibold text-foreground/80">Bio / Special Needs</FormLabel>
+                      <FormLabel className="font-semibold text-foreground/80">{t('bioSpecialNeeds')}</FormLabel>
                       <FormControl>
                         <Textarea 
-                          placeholder="e.g. Friendly but shy. Needs daily medication." 
+                          placeholder={t('placeholderBio')} 
                           className="min-h-[120px] rounded-[20px] text-lg bg-muted/50 border-transparent focus-visible:bg-background focus-visible:border-primary/50 resize-none p-4"
                           {...field} 
                         />
@@ -187,16 +189,16 @@ export function TagUnclaimed({ pet }: { pet: Pet }) {
               </motion.div>
 
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="space-y-6 pt-6 border-t border-border">
-                <h3 className="text-2xl font-serif font-bold text-foreground">Owner Contact</h3>
+                <h3 className="text-2xl font-serif font-bold text-foreground">{t('ownerContact')}</h3>
                 
                 <FormField
                   control={form.control}
                   name="ownerName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="font-semibold text-foreground/80">Your Name</FormLabel>
+                      <FormLabel className="font-semibold text-foreground/80">{t('yourName')}</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g. Jane Doe" className="h-14 rounded-[20px] text-lg bg-muted/50 border-transparent focus-visible:bg-background focus-visible:border-primary/50" {...field} />
+                        <Input placeholder={t('placeholderOwner')} className="h-14 rounded-[20px] text-lg bg-muted/50 border-transparent focus-visible:bg-background focus-visible:border-primary/50" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -208,9 +210,9 @@ export function TagUnclaimed({ pet }: { pet: Pet }) {
                   name="ownerPhone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="font-semibold text-foreground/80">Phone Number *</FormLabel>
+                      <FormLabel className="font-semibold text-foreground/80">{t('phoneNumber')}</FormLabel>
                       <FormControl>
-                        <Input type="tel" placeholder="e.g. (555) 123-4567" className="h-14 rounded-[20px] text-lg bg-muted/50 border-transparent focus-visible:bg-background focus-visible:border-primary/50" {...field} />
+                        <Input type="tel" placeholder={t('placeholderPhone')} className="h-14 rounded-[20px] text-lg bg-muted/50 border-transparent focus-visible:bg-background focus-visible:border-primary/50" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -224,9 +226,9 @@ export function TagUnclaimed({ pet }: { pet: Pet }) {
                     <Lock className="w-6 h-6 text-secondary-foreground" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg text-foreground">Secure Profile</h3>
+                    <h3 className="font-bold text-lg text-foreground">{t('secureProfile')}</h3>
                     <p className="text-sm text-muted-foreground font-medium mt-1">
-                      Set a PIN to lock this profile. You'll need it later if you want to update these details.
+                      {t('secureProfileDesc')}
                     </p>
                   </div>
                 </div>
@@ -241,7 +243,7 @@ export function TagUnclaimed({ pet }: { pet: Pet }) {
                           type="password" 
                           inputMode="numeric"
                           pattern="[0-9]*"
-                          placeholder="Create 4-8 digit PIN" 
+                          placeholder={t('createPinPlaceholder')} 
                           className="h-16 bg-background font-mono tracking-[0.3em] text-center text-xl rounded-[20px] border-secondary/30 focus-visible:ring-secondary/50"
                           {...field} 
                         />
@@ -262,10 +264,10 @@ export function TagUnclaimed({ pet }: { pet: Pet }) {
                 {claimTag.isPending ? (
                   <>
                     <Loader2 className="w-6 h-6 mr-3 animate-spin" />
-                    Saving...
+                    {t('saving')}
                   </>
                 ) : (
-                  "Create Profile"
+                  t('createProfile')
                 )}
               </Button>
             </motion.div>
