@@ -1,7 +1,7 @@
 import { Pet } from "@workspace/api-client-react";
 import { PetPhoto } from "@/components/pet-photo";
-import { Phone, User, Lock, Heart, Home, Stethoscope, Image as ImageIcon, Gamepad2, AlertTriangle, Syringe, Bone, Activity, Navigation, MessageCircle, ShieldCheck } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Phone, User, Lock, Heart, Home, Stethoscope, Image as ImageIcon, Gamepad2, AlertTriangle, Syringe, Bone, Activity, Navigation, MessageCircle, ShieldCheck, Loader2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -389,11 +389,26 @@ function UnlockDialog({ petId, open, onOpenChange, onSuccess }: { petId: string,
   const verifyPin = useVerifyPetPin();
   const [error, setError] = useState("");
   const { t } = useLanguage();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Always reset to a clean, non-stuck state whenever the dialog opens or closes.
+  useEffect(() => {
+    setPin("");
+    setError("");
+    verifyPin.reset();
+    if (open) {
+      // Give the dialog mount/animation a tick before focusing.
+      const timer = setTimeout(() => inputRef.current?.focus(), 100);
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, [open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!pin) return;
-    
+    if (!pin || verifyPin.isPending) return;
+    setError("");
+
     try {
       const res = await verifyPin.mutateAsync({ tagId: petId, data: { pin } });
       if (res.valid) {
@@ -403,27 +418,27 @@ function UnlockDialog({ petId, open, onOpenChange, onSuccess }: { petId: string,
         setError("");
       } else {
         setError(t('incorrectPin'));
+        inputRef.current?.focus();
       }
     } catch (err) {
+      // Network/server failure: surface a clear message and let the user retry immediately.
       setError(t('failedVerifyPin'));
+      inputRef.current?.focus();
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={(val) => {
+      if (verifyPin.isPending) return; // don't allow dismissing mid-request
       onOpenChange(val);
-      if (!val) {
-        setPin("");
-        setError("");
-      }
     }}>
-      <DialogContent className="sm:max-w-md rounded-[32px] p-8 bg-card border border-border">
-        <DialogHeader className="space-y-3">
-          <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-2">
-             <Lock className="w-8 h-8 text-foreground" />
+      <DialogContent className="sm:max-w-lg rounded-[36px] p-9 bg-card border border-border">
+        <DialogHeader className="space-y-4">
+          <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-2">
+             <Lock className="w-10 h-10 text-foreground" />
           </div>
-          <DialogTitle className="text-2xl font-serif text-center">{t('ownerAccess')}</DialogTitle>
-          <DialogDescription className="text-center font-medium text-base">
+          <DialogTitle className="text-3xl font-serif text-center">{t('ownerAccess')}</DialogTitle>
+          <DialogDescription className="text-center font-medium text-lg">
             {t('enterPinDesc')}
           </DialogDescription>
         </DialogHeader>
@@ -431,19 +446,42 @@ function UnlockDialog({ petId, open, onOpenChange, onSuccess }: { petId: string,
         <form onSubmit={handleSubmit} className="space-y-8 pt-6">
           <div className="space-y-3">
             <Input
+              ref={inputRef}
               type="password"
               inputMode="numeric"
               pattern="[0-9]*"
               placeholder="••••"
               value={pin}
               onChange={e => { setPin(e.target.value); setError(""); }}
-              className="text-center text-4xl tracking-[0.5em] h-20 font-mono bg-muted/50 border-transparent rounded-[24px] focus-visible:bg-background"
+              disabled={verifyPin.isPending}
               autoFocus
+              className={cn(
+                "text-center text-5xl tracking-[0.4em] h-24 font-mono bg-muted/50 border-2 border-transparent rounded-[24px] focus-visible:bg-background focus-visible:border-primary transition-colors",
+                error && "border-destructive focus-visible:border-destructive"
+              )}
             />
-            {error && <p className="text-sm font-bold text-destructive text-center">{error}</p>}
+            <AnimatePresence>
+              {error && (
+                <motion.p
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="text-base font-bold text-destructive text-center"
+                >
+                  {error}
+                </motion.p>
+              )}
+            </AnimatePresence>
           </div>
-          <Button type="submit" className="w-full h-16 text-lg font-bold rounded-[20px] shadow-xl" disabled={verifyPin.isPending || pin.length < 4}>
-            {verifyPin.isPending ? t('verifying') : t('unlockProfile')}
+          <Button type="submit" className="w-full h-20 text-xl font-bold rounded-[24px] shadow-xl gap-3" disabled={verifyPin.isPending || pin.length < 4}>
+            {verifyPin.isPending ? (
+              <>
+                <Loader2 className="w-6 h-6 animate-spin" />
+                {t('verifying')}
+              </>
+            ) : (
+              t('unlockProfile')
+            )}
           </Button>
         </form>
       </DialogContent>
