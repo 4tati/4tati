@@ -1,8 +1,6 @@
 import { Switch, Route } from "wouter";
-import { Link } from "wouter";
-import { PlusCircle, Search, Hash, ShieldCheck, Heart, Sparkles, Navigation } from "lucide-react";
+import { PlusCircle, Search, Hash, ShieldCheck, Heart, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useLocalTags } from "@/hooks/use-local-tags";
 import { useCreatePetTag } from "@workspace/api-client-react";
 import { useLocation } from "wouter";
 import { useState } from "react";
@@ -11,7 +9,6 @@ import { motion } from "framer-motion";
 import { useLanguage } from "@/lib/i18n";
 
 export default function Home() {
-  const { tags } = useLocalTags();
   const [, setLocation] = useLocation();
   const createTag = useCreatePetTag();
   const [searchId, setSearchId] = useState("");
@@ -108,35 +105,6 @@ export default function Home() {
           </form>
         </motion.div>
 
-        {tags.length > 0 && (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-            className="space-y-5"
-          >
-            <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground/80 px-2 text-center">{t('yourPets')}</h2>
-            <div className="space-y-3">
-              {tags.map(tag => (
-                <Link key={tag.id} href={`/tag/${tag.id}`} className="block">
-                  <div className="bg-card/80 backdrop-blur-md border border-white/40 dark:border-white/10 p-5 rounded-[24px] hover:border-primary/50 transition-all hover:shadow-lg flex items-center justify-between group active:scale-[0.98]">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <Navigation className="w-6 h-6 text-primary" />
-                      </div>
-                      <div>
-                        <div className="font-mono text-base font-semibold">{tag.id.slice(0, 8)}...</div>
-                        <div className="text-sm text-muted-foreground font-medium">
-                          {new Date(tag.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </motion.div>
-        )}
       </div>
     </div>
   );
