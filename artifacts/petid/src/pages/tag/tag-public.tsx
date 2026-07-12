@@ -82,7 +82,7 @@ export function TagPublic({ pet, onUnlock }: { pet: Pet, onUnlock: (pin: string)
           <motion.h1 
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="text-5xl font-serif font-extrabold mb-2 tracking-tight"
+            className="text-5xl font-serif font-extrabold mb-2 tracking-tight text-white"
           >
             {pet.name}
           </motion.h1>
