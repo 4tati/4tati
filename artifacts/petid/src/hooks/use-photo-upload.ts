@@ -1,5 +1,6 @@
 import { useRequestUploadUrl } from "@workspace/api-client-react";
 import { useState } from "react";
+import { compressImage } from "@/lib/image-compress";
 
 export function usePhotoUpload() {
   const [isUploading, setIsUploading] = useState(false);
@@ -10,8 +11,12 @@ export function usePhotoUpload() {
     setIsUploading(true);
     setProgress(0);
     try {
+      // Resize/compress before uploading so photos load fast both now and
+      // every time the profile page is opened later.
+      const uploadFile = await compressImage(file);
+
       const { uploadURL, objectPath } = await requestUrl.mutateAsync({
-        data: { name: file.name, size: file.size, contentType: file.type }
+        data: { name: uploadFile.name, size: uploadFile.size, contentType: uploadFile.type }
       });
 
       const xhr = new XMLHttpRequest();
@@ -29,8 +34,8 @@ export function usePhotoUpload() {
         xhr.onerror = () => reject(new Error("Upload failed"));
         
         xhr.open("PUT", uploadURL);
-        xhr.setRequestHeader("Content-Type", file.type);
-        xhr.send(file);
+        xhr.setRequestHeader("Content-Type", uploadFile.type);
+        xhr.send(uploadFile);
       });
 
       await uploadPromise;

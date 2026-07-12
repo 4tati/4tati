@@ -139,6 +139,10 @@ router.get('/storage/objects/*path', async (req: Request, res: Response) => {
 
     res.status(response.status);
     response.headers.forEach((value, key) => res.setHeader(key, value));
+    // Uploaded pet photos are immutable (each upload gets a fresh object
+    // path), so the browser can cache them indefinitely instead of
+    // re-downloading the full image every time the profile page opens.
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
 
     if (response.body) {
       const nodeStream = Readable.fromWeb(

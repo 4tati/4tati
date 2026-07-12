@@ -15,6 +15,8 @@ export function PetPhoto({ photoObjectPath, className }: PetPhotoProps) {
           src={src} 
           alt="Pet" 
           className="w-full h-full object-cover"
+          loading="lazy"
+          decoding="async"
         />
       </div>
     );
